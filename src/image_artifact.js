@@ -1,6 +1,6 @@
 const path = require('path');
 const os = require('os');
-const { createDockerEngine, createPodmanEngine } = require("./container_engine");
+const { createDockerContainerEngine, createPodmanContainerEngine } = require("./container_engine");
 
 const INVALID_CHARS = /[\s><:"|*?/\\]/g;
 
@@ -11,9 +11,9 @@ const resolveArtifactName = (imageName) => `action_image_artifact_${resolvePacka
 const getContainerEngine = (engine) => {
     switch (engine) {
         case "docker":
-            return createDockerEngine();
+            return createDockerContainerEngine();
         case "podman":
-            return createPodmanEngine();
+            return createPodmanContainerEngine();
         default:
             throw new Error(`Container engine ${engine} is not supported.`);
     }
