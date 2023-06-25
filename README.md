@@ -1,37 +1,57 @@
 # Container Image Artifact
 
-Module providing functionalities for uploading and downloading container images in a github action workflows. It leverages github artifact in the background.
+Module providing functionalities for uploading and downloading container image(s) in github action workflows. It leverages github artifact in the background to store uploaded images.
 
-It exposes four public methods from ![main script](https://github.com/ishworkh/docker-image-artifact/blob/master/src/index.js) namely `upload`, `download`, `artifactDownloader` and `createOctokitArtifactDownloader`.
+Images can be uploaded and downloaded with multiple container engines, and currently supported container engines are `docker` and `podman`.
 
-## upload
+Following functions are exported from the module,
 
-Function to upload image as a github artifact to the current workflow run.
+## getUploader
 
-```nodejs
+Gives image uploader function which can be used to upload image as a github artifact to the current workflow run.
 
-uploadImage(image, artifactUploader, retentionDays = 0)
+```javascript
+const artifactUploader = createArtifactUploader();
 
+// "docker" as container engine
+getUploader(artifactUploader)(image, retentionDays = 0);
+
+// "podman" as container engine
+getUploader(artifactUploader, "podman")(image, retentionDays = 0);
 ```
 
-## download
+## getDownloader
 
-Function to download image.
+Gives image downloader function which can be used to download images.
 
-```nodejs
+```javascript
+const artifactDownloader = createArtifactDownloader();
 
-downloadImage(image, artifactDownloader)
+getDownloader(artifactDownloader)(image);
+```
 
+## createArtifactUploader
+
+Function that creates core action artifact uploader. This uploader uses [`@actions/artifact`](https://github.com/actions/toolkit/tree/master/packages/artifact) module underneath.
+
+```javascript
+const uploader = createArtifactUploader();
 ```
 
 ## createArtifactDownloader
 
 Function that creates core action artifact downloader. This downloader uses [`@actions/artifact`](https://github.com/actions/toolkit/tree/master/packages/artifact) module underneath and is capable of downloading artifacts from the same workflow.
 
-## createOcotokitArtifactDownloader
+```javascript
+const downloader = createArtifactDownloader();
+```
+
+## createOctokitArtifactDownloader
 
 Function that creates octokit artifact downloader. This downloader uses [`octokit`](https://github.com/octokit/action.js/) module underneath. This downloader is capable of downloading artifacts from another workflow.
 
-## createArtifactUploader
-
-Function that creates core action artifact uploader. This uploader uses [`@actions/artifact`](https://github.com/actions/toolkit/tree/master/packages/artifact) module underneath.
+```javascript
+const downloader = createOctokitArtifactDownloader(
+  "github_token", "foo_owner", "bar_repo", "Test workflow", (workflowRun) => workflowRun.id == 12434344
+);
+```

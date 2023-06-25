@@ -38,7 +38,7 @@ function getOctokitClient(token) {
  * 
  * @returns [Object]
  * 
- * Ref Check https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository
+ * Ref https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository
  */
 async function fetchWorkflowRuns(octokit, owner, repo, workflow) {
     const { data: workflowRuns } = await octokit.rest.actions.listWorkflowRunsForRepo({ owner, repo });
