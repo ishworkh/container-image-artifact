@@ -1,7 +1,6 @@
-const docker = require('./docker');
-
 const path = require('path');
 const os = require('os');
+const { createDockerEngine, createPodmanEngine } = require("./container_engine");
 
 const INVALID_CHARS = /[\s><:"|*?/\\]/g;
 
@@ -9,42 +8,58 @@ const resolvePackageName = (imageName) => imageName.replace(INVALID_CHARS, '_');
 
 const resolveArtifactName = (imageName) => `action_image_artifact_${resolvePackageName(imageName)}`;
 
+const getContainerEngine = (engine) => {
+    switch (engine) {
+        case "docker":
+            return createDockerEngine();
+        case "podman":
+            return createPodmanEngine();
+        default:
+            throw new Error(`Container engine ${engine} is not supported.`);
+    }
+}
+
 /**
- * @param {string} image 
- * @param {Object} artifactUploader
- * @param {number} retentionDays
+ * @param {Object} artifactUploader 
+ * @param {string} containerEngineName // Default to docker
  * 
- * @returns {string} // Uploaded artifact name
+ * @returns {Function} // async (string, int) =>  string i.e. Uploaded artifact name
  * 
  * Upload a image package as github artifact which is later possible to point to with given image name. 
  * Eg. image "foo:latest" is packaged to a file `foo_latest` and then upload as an artifact with a name 
  *      `image_artifact_foo_latest`. In short we will have an artifact like,
  *             image_artifact_foo_latest[foo_latest]
  */
-exports.upload = async function (image, artifactUploader, retentionDays = 0) {
-    const packagePath = await docker.packageImage(image, path.join(os.tmpdir(), resolvePackageName(image)));
+exports.getUploader = function (artifactUploader, containerEngineName = "docker") {
+    const containerEngine = getContainerEngine(containerEngineName);
+    return async (image, retentionDays = 0) => {
+        const packagePath = await containerEngine.packageImage(image, path.join(os.tmpdir(), resolvePackageName(image)));
 
-    const artifactName = resolveArtifactName(image);
-    await artifactUploader(artifactName, packagePath, retentionDays);
+        const artifactName = resolveArtifactName(image);
+        await artifactUploader(artifactName, packagePath, retentionDays);
 
-    return artifactName;
+        return artifactName;
+    }
 }
 
 /**
- * @param {string} image  
- * @param {Object} artifactDownloader // Defaults to core artifact downloader
+ * @param {Object} artifactDownloader
+ * @param {string} containerEngineName // Defaults to docker
  * 
- * @returns {string} // Artifact local downloaded path 
+ * @returns {Function} // async (string) => string i.e.Artifact local downloaded path 
  * 
  * For a github artifact to be linked with the given image name, it has to be named in predictable way.
  * Eg. image `foo:latest` packaged as `foo_latest` uploaded as an artifact named `image_artifact_foo_latest`
  *      can be downloaded and loaded with ${downloadDir}/${packageName} i.e /tmp/foo_latest
  */
-exports.download = async function (image, artifactDownloader) {
-    const downloadDir = await artifactDownloader(resolveArtifactName(image), os.tmpdir());
+exports.getDownloader = function (artifactDownloader, containerEngineName = "docker") {
+    const containerEngine = getContainerEngine(containerEngineName);
+    return async (image) => {
+        const downloadDir = await artifactDownloader(resolveArtifactName(image), os.tmpdir());
 
-    const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
-    await docker.loadImage(imagePackagePath);
+        const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
+        await containerEngine.loadImage(imagePackagePath);
 
-    return imagePackagePath;
+        return imagePackagePath;
+    }
 }

@@ -1,9 +1,9 @@
-const { upload, download } = require("./image_artifact");
+const { getUploader, getDownloader } = require("./image_artifact");
 const { createArtifactDownloader, createOctokitArtifactDownloader, createArtifactUploader } = require("./github_artifact");
 
 module.exports = {
-  upload,
-  download,
+  getUploader,
+  getDownloader,
 
   // Github artifact downloaders - 2 types
   //  artifactDownloader - core action artifact downloader
