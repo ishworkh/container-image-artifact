@@ -57,7 +57,7 @@ class PodmanContainerEngine extends ContainerEngine {
   }
 
   _enginePackageImageCommand(imageName, outputPath) {
-    return `podman save ${imageName} -o ${outputPath}`
+    return `podman save -q ${imageName} -o ${outputPath}`
   }
 }
 
