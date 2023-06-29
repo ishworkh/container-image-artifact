@@ -27,7 +27,11 @@ Gives image downloader function which can be used to download images.
 ```javascript
 const artifactDownloader = createArtifactDownloader();
 
+// "docker" as container engine
 getDownloader(artifactDownloader)(image);
+
+// "podman" as container engine
+getDownloader(artifactDownloader, "podman")(image);
 ```
 
 ## createArtifactUploader
