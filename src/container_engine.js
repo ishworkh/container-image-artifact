@@ -53,7 +53,7 @@ class DockerContainerEngine extends ContainerEngine {
 
 class PodmanContainerEngine extends ContainerEngine {
   _engineImageLoadCommand(inputPath) {
-    return `podman load -i ${inputPath}`;
+    return `podman load -q -i ${inputPath}`;
   }
 
   _enginePackageImageCommand(imageName, outputPath) {

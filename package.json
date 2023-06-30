@@ -1,6 +1,6 @@
 {
   "name": "container-image-artifact",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Node module containing functionalities for upload/downloading container images as artifact in github action",
   "main": "./src/index.js",
   "scripts": {
