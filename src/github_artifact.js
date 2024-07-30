@@ -1,4 +1,4 @@
-const artifact = require('@actions/artifact');
+const {DefaultArtifactClient} = require('@actions/artifact');
 const github = require('@actions/github');
 
 const admzip = require('adm-zip');
@@ -12,7 +12,7 @@ Github Core Artifact - @actions/artifact
 var artifactClient;
 
 function getArtifactClient() {
-    artifactClient = artifactClient || artifact.create();
+    artifactClient = artifactClient || new DefaultArtifactClient();
 
     return artifactClient;
 }
@@ -89,9 +89,20 @@ exports.createArtifactDownloader = () => {
         if (!fs.existsSync(basedir)) {
             throw new Error(`Artifact Download failed: ${name} - Directory does not exist: ${basedir}`);
         }
-        const downloadResponse = await getArtifactClient().downloadArtifact(name, basedir);
 
-        return downloadResponse.downloadPath;
+        const {artifact} = await getArtifactClient().getArtifact(name);
+        if (!artifact) {
+            throw new Error(`Artifact Download failed: ${name} - Artifact not found`);
+        }
+
+        const {downloadPath} = await getArtifactClient().downloadArtifact(artifact.id, {
+            path: basedir
+        });
+        if (!downloadPath) {
+            throw new Error(`Artifact Download failed: ${name}`);
+        }
+
+        return downloadPath;
     }
 }
 
@@ -152,12 +163,10 @@ exports.createArtifactUploader = () => {
             throw new Error(`Artifact Upload failed: ${name} - File does not exist: ${file}`);
         }
 
-        const uploadResponse = await getArtifactClient().uploadArtifact(
+        const {size} = await getArtifactClient().uploadArtifact(
             name, [file], path.dirname(file), { retentionDays: retentionDays }
         );
-
-        // there is a failed item
-        if (uploadResponse.failedItems.length > 0) {
+        if (!size) {
             throw new Error(`Artifact Upload failed: ${name}`);
         }
 
