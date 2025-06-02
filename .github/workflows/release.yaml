@@ -1,0 +1,42 @@
+name: Create Release
+on:
+  push:
+    branches:
+      - main
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Read version
+        id: read_version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      
+      - name: Create tag
+        run: |
+          git tag v${{ steps.read_version.outputs.version }}
+          git push origin v${{ steps.read_version.outputs.version }}
+
+      # Create GitHub Release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.read_version.outputs.version }}
+          release_name: Release v${{ steps.read_version.outputs.version }}
+          body: |
+            Release created automatically by GitHub Actions.
+          draft: false
+          prerelease: false
+      
+      - name: Clean up if failure
+        if: ${{ failure() }}
+        run: |
+          git tag --delete v${{ steps.read_version.outputs.version }}
+          git push --delete origin v${{ steps.read_version.outputs.version }}
