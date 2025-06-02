@@ -29,6 +29,7 @@ jobs:
 
       # Create GitHub Release
       - name: Create GitHub Release
+        id: github_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,8 +41,8 @@ jobs:
           draft: false
           prerelease: false
       
-      - name: Clean up if failure
-        if: ${{ failure() }}
+      - name: Clean up if github release failed
+        if: ${{ failure() && steps.github_release.conclusion == 'failure' }}
         run: |
           git tag --delete v${{ steps.read_version.outputs.version }}
           git push --delete origin v${{ steps.read_version.outputs.version }}
