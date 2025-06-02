@@ -37,7 +37,7 @@ jobs:
           tag_name: v${{ steps.read_version.outputs.version }}
           release_name: v${{ steps.read_version.outputs.version }}
           body: |
-            Release created automatically by GitHub Actions.
+            Release created for tag v${{ steps.read_version.outputs.version }}.
           draft: false
           prerelease: false
       
