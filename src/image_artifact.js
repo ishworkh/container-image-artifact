@@ -50,12 +50,13 @@ exports.getUploader = function (artifactUploader, containerEngineName = "docker"
  * 
  * For a github artifact to be linked with the given image name, it has to be named in predictable way.
  * Eg. image `foo:latest` packaged as `foo_latest` uploaded as an artifact named `image_artifact_foo_latest`
- *      can be downloaded and loaded with ${downloadDir}/${packageName} i.e /tmp/foo_latest
+ *      can be downloaded and loaded with ${downloadTmpDir}/${packageName}
+ *      i.e /tmp/foo_latest, ${{ runner.temp }}/foo_tag ...
  */
 exports.getDownloader = function (artifactDownloader, containerEngineName = "docker") {
     const containerEngine = getContainerEngine(containerEngineName);
-    return async (image) => {
-        const downloadDir = await artifactDownloader(resolveArtifactName(image), os.tmpdir());
+    return async (image, downloadTmpDir = os.tmpdir() ) => {
+        const downloadDir = await artifactDownloader(resolveArtifactName(image), downloadTmpDir);
 
         const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
         await containerEngine.loadImage(imagePackagePath);
